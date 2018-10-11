@@ -101,6 +101,18 @@ class App extends Component {
     }
   }
 
+  onPrevCick() {
+    this.player.previousTrack();
+  }
+
+  onPlayClick() {
+    this.player.togglePlay();
+  }
+
+  onNextClick() {
+    this.player.nextTrack();
+  }
+
   render() {
     const {
       token,
@@ -128,6 +140,13 @@ class App extends Component {
             <p>Artist: {artistName}</p>
             <p>Track: {trackName}</p>
             <p>Album: {albumName}</p>
+            <p>
+              <button onClick={() => this.onPrevCick()}>Previous</button>
+              <button onClick={() => this.onPlayClick()}>
+                {playing ? 'Pause' : 'Play'}
+              </button>
+              <button onClick={() => this.onNextClick()}>Next</button>
+            </p>
           </div>
         ) : (
           <div>
