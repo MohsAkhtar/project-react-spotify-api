@@ -69,10 +69,11 @@ class App extends Component {
     });
 
     // Ready
-    this.player.on('ready', data => {
+    this.player.on('ready', async data => {
       let { device_id } = data;
-      console.log('Let the music play!');
-      this.setState({ deviceId: device_id });
+      console.log('Enjoy the sound!');
+      await this.setState({ deviceId: device_id });
+      this.transferPlaybackHere();
     });
   }
 
@@ -101,6 +102,7 @@ class App extends Component {
     }
   }
 
+  // play control methods
   onPrevCick() {
     this.player.previousTrack();
   }
@@ -111,6 +113,23 @@ class App extends Component {
 
   onNextClick() {
     this.player.nextTrack();
+  }
+
+  // Automatically play music here
+  transferPlaybackHere() {
+    const { deviceId, token } = this.state;
+
+    fetch('https://api.spotify.com/v1/me/player', {
+      method: 'PUT',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        device_ids: [deviceId],
+        play: true
+      })
+    });
   }
 
   render() {
