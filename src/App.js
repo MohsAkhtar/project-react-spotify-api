@@ -16,12 +16,91 @@ class App extends Component {
       position: 0,
       duration: 0
     };
+    this.playerCheckInterval = null;
   }
+
   handleLogin() {
     if (this.state.token !== '') {
       this.setState({ loggedIn: true });
+      // check every second for the player
+      this.playerCheckInterval = setInterval(() => this.checkForPlayer(), 1000);
     }
   }
+
+  checkForPlayer() {
+    const { token } = this.state;
+
+    if (window.Spotify !== null) {
+      // cancel the interval
+      clearInterval(this.playerCheckInterval);
+
+      this.player = new window.Spotify.Player({
+        name: "Mohs's Spotify Player",
+        getOAuthToken: cb => {
+          cb(token);
+        }
+      });
+
+      this.createEventHandlers();
+
+      // finally, connect!
+      this.player.connect();
+    }
+  }
+
+  createEventHandlers() {
+    this.player.on('initialization_error', e => {
+      console.error(e);
+    });
+    this.player.on('authentication_error', e => {
+      console.error(e);
+      this.setState({ loggedIn: false });
+    });
+    this.player.on('account_error', e => {
+      console.error(e);
+    });
+    this.player.on('playback_error', e => {
+      console.error(e);
+    });
+
+    // Playback status updates
+    this.player.on('player_state_changed', state => {
+      this.onStateChanged(state);
+    });
+
+    // Ready
+    this.player.on('ready', data => {
+      let { device_id } = data;
+      console.log('Let the music play!');
+      this.setState({ deviceId: device_id });
+    });
+  }
+
+  onStateChanged(state) {
+    // if no longer listening to music, we get null state
+    if (state !== null) {
+      const {
+        current_track: currentTrack,
+        position,
+        duration
+      } = state.track_window;
+      const trackName = currentTrack.name;
+      const albumName = currentTrack.album.name;
+      const artistName = currentTrack.artists
+        .map(artist => artist.name)
+        .join(', ');
+      const playing = !state.paused;
+      this.setState({
+        position,
+        duration,
+        trackName,
+        albumName,
+        artistName,
+        playing
+      });
+    }
+  }
+
   render() {
     const {
       token,
